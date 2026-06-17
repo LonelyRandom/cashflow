@@ -172,7 +172,7 @@ def complex_home():
                         unsafe_allow_html=True
                     )
                 with st.container(key=f'show-eye-{index}', width='content'):
-                    st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance'].iloc[0]), key=f'show-button-{index}')
+                    st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance']), key=f'show-button-{index}')
                 
             st.markdown(
             f"""
