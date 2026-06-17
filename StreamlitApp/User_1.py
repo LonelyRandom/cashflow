@@ -172,7 +172,7 @@ def complex_home():
                         unsafe_allow_html=True
                     )
                 with st.container(key=f'show-eye-{index}', width='content'):
-                    st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance']), key=f'show-button-{index}')
+                    st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance'].iloc[0]), key=f'show-button-{index}')
                 
             st.markdown(
             f"""
@@ -812,7 +812,7 @@ def complex_home():
                         if st.button('🗑️', type='tertiary', key=f'delete_category_{i}'):
                             st.session_state.category_df = category_df.drop(i)
                             row = i+2
-                            fund_worksheet().delete_rows(row,row)
+                            category_worksheet().delete_rows(row,row)
                             st.rerun()
                 
                 if st.session_state.edit_category == i:
@@ -824,7 +824,7 @@ def complex_home():
                             category_df.at[i, 'Balance'] = new_category
                             st.session_state.category_df = category_df
                             row = i+2
-                            fund_worksheet().update(f'B{row}:B{row}', [[new_category]])
+                            category_worksheet().update(f'B{row}:B{row}', [[new_category]])
                             st.session_state.edit_category = None
 
                             st.rerun()
@@ -856,7 +856,7 @@ def complex_home():
                         if st.button('🗑️', type='tertiary', key=f'delete_quick_log{i}'):
                             st.session_state.quick_log_df = quick_log_df.drop(i)
                             row = i+2
-                            fund_worksheet().delete_rows(row,row)
+                            quick_log_worksheet().delete_rows(row,row)
                             st.rerun()
                 
                 if st.session_state.edit_quick_log == i:
