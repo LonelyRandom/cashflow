@@ -87,6 +87,74 @@ def debt_display(check, label, amount):
         st.session_state[f'{label}_val'] = f'Rp. {amount:,}'
         st.session_state[f'show_{label}'] = True
 
+@st.dialog('Lend Details', width='small')
+def lend_details(df, category_df):
+    for i in range(len(df)):
+        data = df.loc[i]
+        category = category_df.loc[category_df['Category'] == data['Category']]
+        flow_text = f"{data['Fund'] + ' → ' + data['Category'] if category['Type'].iloc[0] == 'Minus' else data['Category'] + ' → ' + data['Fund']}"
+        st.markdown(
+        f"""<div style="
+            border: 1px solid rgba(49, 51, 63, 1);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom:5px;
+        ">
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            ">
+                <div style="
+                    font-size: 12px;
+                    color: gray;
+                ">
+                    {flow_text}
+                </div>
+                <div style="
+                    font-size: 10px;
+                    color: gray;
+                ">
+                    {datetime.strptime(data['Timestamp'], '%d-%m-%Y').strftime('%d %B %Y')}
+                </div>
+            </div>
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div style="
+                    font-size: 18px;
+                    font-weight: bold;
+                ">
+                    Rp {data['Amount']:,}
+                </div>
+                <div style="
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: {'#28a745' if category['Type'].iloc[0] == 'Plus' else '#dc3545'};
+                ">
+                    {'▲ Income' if category['Type'].iloc[0] == 'Plus' else '▼ Expense'}
+                </div>
+            </div>
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <div style="
+                    font-size: 10px;
+                    color: gray;
+                ">
+                    {'Notes : ' + data['Notes'] if data['Notes'] != '--' else 'Notes : -'}
+                </div>
+            </div>
+        </div>""", unsafe_allow_html=True)
+    
+    if st.button('❌ Close', width='stretch'):
+        st.rerun()
+
 def complex_home():
     if 'log_df' not in st.session_state:
         st.session_state.log_df = load_data_log()
@@ -173,20 +241,9 @@ def complex_home():
                     )
                 with st.container(key=f'show-eye-{index}', width='content'):
                     st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance'].iloc[0]), key=f'show-button-{index}')
-                
-            st.markdown(
-            f"""
-                <style>
-                .st-key-show-eye-{index} button{{
-                    height: 70px;
-                    padding: 5px;
-                    margin-bottom: -100px;
-                }}  
-                </style>
-            """, unsafe_allow_html=True)
-
             index+=1
-        
+
+
         st.divider()
         debt_df = log_df[log_df['Category'].isin(['📋 Debt', '💸 Payback'])].reset_index()
         debt = 0
@@ -199,13 +256,29 @@ def complex_home():
             else:
                 pay += data['Amount']
         
-
         debt_left = debt - pay
+
+        lend_df = log_df[log_df['Category'].isin(['💰 Lending', '💷 Repayment'])].reset_index()
+        lend = 0
+        repay = 0
+        for i in range(len(lend_df)):
+            data = lend_df.loc[i]
+
+            if data['Category'] == '💰 Lending':
+                lend +=data['Amount']
+            else:
+                repay += data['Amount']
+
+        lend_left = lend - repay
 
         if 'show_debt' not in st.session_state:
             st.session_state.show_debt = False
         if 'debt_val' not in st.session_state:
             st.session_state.debt_val = '******'
+        if 'show_lend' not in st.session_state:
+            st.session_state.show_lend = False
+        if 'lend_val' not in st.session_state:
+            st.session_state.lend_val = '******'
 
         with st.container(horizontal=True, width='stretch'):
             with st.container(width='stretch'):
@@ -230,10 +303,38 @@ def complex_home():
                 )
 
             with st.container(key='debt-eye', width='content'):
-                st.button("👁️", on_click=debt_display, args=(st.session_state.show_debt, 'debt', debt_left))
+                st.button("👁️", on_click=debt_display, args=(st.session_state.show_debt, 'debt', debt_left), key='debt-eye-btn')
             with st.container(key='debt-detail', width='content'):
-                if st.button("🗒️"):
+                if st.button("🗒️", key='debt-detail-btn'):
                     debt_details(debt_df, category_df)
+
+        with st.container(horizontal=True, width='stretch'):
+            with st.container(width='stretch'):
+                st.markdown(
+                    f"""
+                    <div style="
+                        border: 1px solid rgba(250, 250, 250, 0.2);
+                        border-radius: 10px;
+                        padding: 12px;
+                        text-align: center;
+                        margin-bottom:10px;
+                    ">
+                        <div style="font-size: 10px; color: gray;">
+                            💰 Lending
+                        </div>
+                        <div style="font-size: 18px; font-weight: bold;">
+                            {st.session_state.lend_val}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with st.container(key='lend-eye', width='content'):
+                st.button("👁️", on_click=debt_display, args=(st.session_state.show_lend, 'lend', lend_left), key='lend-eye-btn')
+            with st.container(key='lend-detail', width='content'):
+                if st.button("🗒️", key='lend-detail-btn'):
+                    lend_details(lend_df, category_df)
             
         st.markdown(
         f"""
@@ -248,9 +349,31 @@ def complex_home():
                 padding: 5px;
                 margin-bottom: -100px;
             }}  
+            .st-key-lend-eye button{{
+                height: 70px;
+                padding: 5px;
+                margin-bottom: -100px;
+            }}  
+            .st-key-lend-detail button{{
+                height: 70px;
+                padding: 5px;
+                margin-bottom: -100px;
+            }}  
             </style>
         """, unsafe_allow_html=True)
     
+        for i in range(len(shown)):
+            st.markdown(
+            f"""
+                <style>
+                .st-key-show-eye-{i} button{{
+                    height: 70px !important;
+                    padding: 5px !important;
+                    margin-bottom: -100px !important;
+                }}  
+                </style>
+            """, unsafe_allow_html=True)
+
     film_navbar = st.container(key='film-navbar', width='stretch', horizontal=True, horizontal_alignment='right')
     
     with film_navbar:
@@ -433,11 +556,22 @@ def complex_home():
                             
                             funds_df.at[fund_index, 'Balance'] = new_balance
 
+                            label = funds_df.loc[fund_index, 'Type']
+                            label = '_'.join(label.split(' ',1)[1].lower().split(' '))
+                            if st.session_state[f'{label}_val'] != '******':
+                                st.session_state[f'{label}_val'] = f'Rp. {new_balance:,}'
+
                             if category.split(' ',1)[1] == 'Saving':
                                 saving_fund = funds_df[funds_df['Type'] == '🏦 Sibuhar']
                                 saving_fund_index = saving_fund.index[0]
 
                                 funds_df.at[saving_fund_index, 'Balance'] = saving_fund['Balance'].iloc[0] + amount
+
+                                label = funds_df.loc[saving_fund_index, 'Type']
+                                label = '_'.join(label.split(' ',1)[1].lower().split(' '))
+                                label_val = saving_fund['Balance'].iloc[0] + amount
+                                if st.session_state[f'{label}_val'] != '******':
+                                    st.session_state[f'{label}_val'] = f'Rp. {label_val:,}'
                                 saving_row = saving_fund_index + 2
                                 fund_worksheet().update(f'B{saving_row}:B{saving_row}', [[int(saving_fund['Balance'].iloc[0] + amount)]])
 
@@ -462,6 +596,11 @@ def complex_home():
             st.session_state.edit_log = None
         if 'current_date' not in st.session_state:
             st.session_state.current_date = date.today()
+
+        if st.button('test'):
+            st.write('hello')
+            st.session_state['bca_val'] = '10000'
+            st.rerun()
 
         @st.dialog('Log Detail', width='small')
         def edit_log():
@@ -508,11 +647,21 @@ def complex_home():
 
                     funds_df.at[matched_fund_index, 'Balance'] = reset_balance
 
+                    label = funds_df.loc[matched_fund_index, 'Type']
+                    label = '_'.join(label.split(' ',1)[1].lower().split(' '))
+                    if st.session_state[f'{label}_val'] != '******':
+                        st.session_state[f'{label}_val'] = f'Rp. {reset_balance:,}'
+
                     if selected_category['Type'].iloc[0] == 'Plus':
                         new_balance = selected_fund['Balance'].iloc[0] + amount
                     else:
                         new_balance = selected_fund['Balance'].iloc[0] - amount
                     funds_df.at[selected_fund_index, 'Balance'] = new_balance
+
+                    label = funds_df.loc[selected_fund_index, 'Type']
+                    label = '_'.join(label.split(' ',1)[1].lower().split(' '))
+                    if st.session_state[f'{label}_val'] != '******':
+                        st.session_state[f'{label}_val'] = f'Rp. {new_balance:,}'
 
                     reset_row = matched_fund_index + 2
                     new_row = selected_fund_index + 2
@@ -548,6 +697,11 @@ def complex_home():
                         
                     funds_df.at[matched_fund_index, 'Balance'] = new_balance
 
+                    label = funds_df.loc[matched_fund_index, 'Type']
+                    label = '_'.join(label.split(' ',1)[1].lower().split(' '))
+                    if st.session_state[f'{label}_val'] != '******':
+                        st.session_state[f'{label}_val'] = f'Rp. {new_balance:,}'
+
                     new_row = matched_fund_index + 2
                     fund_worksheet().update(f'B{new_row}:B{new_row}', [[int(new_balance)]])
 
@@ -579,6 +733,11 @@ def complex_home():
                     reset_balance = matched_fund['Balance'].iloc[0] + log['Amount']
 
                 funds_df.at[matched_fund_index, 'Balance'] = reset_balance
+
+                label = funds_df.loc[matched_fund_index, 'Type']
+                label = '_'.join(label.split(' ',1)[1].lower().split(' '))
+                if st.session_state[f'{label}_val'] != '******':
+                    st.session_state[f'{label}_val'] = f'Rp. {reset_balance:,}'
 
                 row = matched_fund_index + 2
                 st.session_state.funds_df = funds_df
