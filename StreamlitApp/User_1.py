@@ -704,33 +704,35 @@ def complex_home():
             if session_label_amount not in st.session_state:
                 st.session_state[session_label_amount] = '******'
 
-            with st.container(horizontal=True, width='stretch'):
-                with st.container(width='stretch'):
-                    st.markdown(
-                        f"""
-                        <div style="
-                            border: 1px solid rgba(250, 250, 250, 0.2);
-                            border-radius: 10px;
-                            padding: 12px;
-                            text-align: center;
-                            margin-bottom:10px;
-                        ">
-                            <div style="font-size: 10px; color: gray;">
-                                {i}
+            with st.container(key=f'navbar-fund-info-{i}', horizontal=True):
+                with st.container(horizontal=True, width='stretch'):
+                    with st.container(width='stretch'):
+                        st.markdown(
+                            f"""<div style="font-size: 10px; color: gray; text-align:center;">
+                                    {i}
+                                </div>
+                                <div style="font-size: 18px; font-weight: bold; text-align:center;">
+                                    {st.session_state[session_label_amount]}
+                                </div>
                             </div>
-                            <div style="font-size: 18px; font-weight: bold;">
-                                {st.session_state[session_label_amount]}
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                with st.container(key=f'show-eye-{index}', width='content'):
-                    st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance'].iloc[0]), key=f'show-button-{index}')
-            index+=1
-
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with st.container(key=f'show-eye-{index}', width='content'):
+                        st.button("👁️", on_click=debt_display, args=(st.session_state[session_label_show], label, funds_df.loc[funds_df['Type'] == i, 'Balance'].iloc[0]), key=f'show-button-{index}')
+                index+=1
 
         st.divider()
+        st.markdown("""
+            <style>
+                [class*="st-key-navbar-fund-info-"]{
+                    text-align: center !important;
+                    border: 1px solid rgba(250, 250, 250, 0.2);
+                    border-radius: 10px;
+                    padding: 12px;
+                }
+            </style>
+        """, unsafe_allow_html=True)
         debt_df = log_df[log_df['Category'].isin(['📋 Debt', '💸 Payback'])].reset_index()
         debt = 0
         pay = 0
@@ -766,62 +768,48 @@ def complex_home():
         if 'lend_val' not in st.session_state:
             st.session_state.lend_val = '******'
 
-        with st.container(horizontal=True, width='stretch'):
-            with st.container(width='stretch'):
-                st.markdown(
-                    f"""
-                    <div style="
-                        border: 1px solid rgba(250, 250, 250, 0.2);
-                        border-radius: 10px;
-                        padding: 12px;
-                        text-align: center;
-                        margin-bottom:10px;
-                    ">
-                        <div style="font-size: 10px; color: gray;">
-                            💸 Debt
+        with st.container(key=f'navbar-fund-info-debt'):
+            with st.container(horizontal=True, width='stretch'):
+                with st.container(width='stretch'):
+                    st.markdown(
+                        f"""<div style="font-size: 10px; color: gray; text-align: center;">
+                                💸 Debt
+                            </div>
+                            <div style="font-size: 18px; font-weight: bold; text-align: center;">
+                                {st.session_state.debt_val}
+                            </div>
                         </div>
-                        <div style="font-size: 18px; font-weight: bold;">
-                            {st.session_state.debt_val}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-            with st.container(key='debt-eye', width='content'):
-                st.button("👁️", on_click=debt_display, args=(st.session_state.show_debt, 'debt', debt_left), key='debt-eye-btn')
-            with st.container(key='debt-detail', width='content'):
-                if st.button("🗒️", key='debt-detail-btn'):
-                    st.session_state.debt_dialog = True
+                with st.container(key='debt-eye', width='content'):
+                    st.button("👁️", on_click=debt_display, args=(st.session_state.show_debt, 'debt', debt_left), key='debt-eye-btn')
+                with st.container(key='debt-detail', width='content'):
+                    if st.button("🗒️", key='debt-detail-btn'):
+                        st.session_state.debt_dialog = True
 
-        with st.container(horizontal=True, width='stretch'):
-            with st.container(width='stretch'):
-                st.markdown(
-                    f"""
-                    <div style="
-                        border: 1px solid rgba(250, 250, 250, 0.2);
-                        border-radius: 10px;
-                        padding: 12px;
-                        text-align: center;
-                        margin-bottom:10px;
-                    ">
-                        <div style="font-size: 10px; color: gray;">
-                            💰 Lending
+        with st.container(key='navbar-fund-info-lend'):
+            with st.container(horizontal=True, width='stretch'):
+                with st.container(width='stretch'):
+                    st.markdown(
+                        f"""<div style="font-size: 10px; color: gray; text-align: center;">
+                                💰 Lending
+                            </div>
+                            <div style="font-size: 18px; font-weight: bold; text-align: center;">
+                                {st.session_state.lend_val}
+                            </div>
                         </div>
-                        <div style="font-size: 18px; font-weight: bold;">
-                            {st.session_state.lend_val}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                        """,
+                        unsafe_allow_html=True
+                    )
 
-            with st.container(key='lend-eye', width='content'):
-                st.button("👁️", on_click=debt_display, args=(st.session_state.show_lend, 'lend', lend_left), key='lend-eye-btn')
-            with st.container(key='lend-detail', width='content'):
-                if st.button("🗒️", key='lend-detail-btn'):
-                    st.session_state.lend_dialog = True
-                    st.rerun()
+                with st.container(key='lend-eye', width='content'):
+                    st.button("👁️", on_click=debt_display, args=(st.session_state.show_lend, 'lend', lend_left), key='lend-eye-btn')
+                with st.container(key='lend-detail', width='content'):
+                    if st.button("🗒️", key='lend-detail-btn'):
+                        st.session_state.lend_dialog = True
+                        st.rerun()
             
     film_navbar = st.container(key='film-navbar', width='stretch', horizontal=True, horizontal_alignment='right')
     
@@ -1131,7 +1119,7 @@ def complex_home():
                     with st.container(width='stretch'):
                         st.markdown(
                             f"""<div style="
-                                border: 1px solid rgba(49, 51, 63, 1);
+                                border: 1px solid {log_status_color};
                                 border-radius: 10px;
                                 padding: 12px;
                                 margin-bottom:5px;

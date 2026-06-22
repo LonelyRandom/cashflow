@@ -5,33 +5,8 @@ def styling():
     st.markdown(
     f"""
         <style>
-        .st-key-debt-eye button{{
-            height: 70px;
-            padding: 5px;
-            margin-bottom: -100px;
-        }}  
-        .st-key-debt-detail button{{
-            height: 70px;
-            padding: 5px;
-            margin-bottom: -100px;
-        }}  
-        .st-key-lend-eye button{{
-            height: 70px;
-            padding: 5px;
-            margin-bottom: -100px;
-        }}  
-        .st-key-lend-detail button{{
-            height: 70px;
-            padding: 5px;
-            margin-bottom: -100px;
-        }}  
         [class*="st-key-debt-btn-info-"] button {{
             height: 99px !important;
-            padding: 5px !important;
-            margin-bottom: -100px !important;
-        }}
-        [class*="st-key-show-eye-"] button {{
-            height: 70px !important;
             padding: 5px !important;
             margin-bottom: -100px !important;
         }}
@@ -49,8 +24,19 @@ def styling():
             height: 97px;
             padding: 5px;
             margin-bottom: -100px;
-            background-color: #495057;
-        }}  
-        </style>
+            background-color: rgb(43, 44, 54);
+        }} 
+        [class*="st-key-navbar-fund-info-"] {{
+            text-align: center !important;
+            border: 1px solid rgba(250, 250, 250, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+        }}
+        [class*="st-key-log-info-"] {{
+            text-align: center !important;
+            border: 1px solid rgba(250, 250, 250, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+        }}
         </style>
     """, unsafe_allow_html=True)
