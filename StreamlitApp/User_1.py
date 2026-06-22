@@ -607,15 +607,13 @@ def complex_home():
                 st.rerun()
         st.divider()
 
-        st.write(category)
         if st.button('💾 Add', width='stretch'):
             added = True
-        
 
         if added:
             if amount != 0:
                 if st.session_state.selected_ref and st.session_state.selected_ref != '--':
-                    log_df.at[st.session_state.selected_ref, 'Ref ID'] = log_id
+                    log_df.at[st.session_state.selected_ref, 'Ref ID'] = str(log_id)
                     row = st.session_state.selected_ref + 2
                     log_worksheet().update(f'G{row}:G{row}', [[log_id]])
 
@@ -1046,6 +1044,12 @@ def complex_home():
                 st.rerun()
             
             if st.button('🗑️ Delete', width='stretch'):
+                if log['Ref ID'] != '--':
+                    ref_id = log['Ref ID']
+                    matched_ref_index = log_df[log_df['ID'] == ref_id].index[0]
+                    log_df.at[matched_ref_index, 'Ref ID'] = '--'
+                    row = matched_ref_index + 2
+                    log_worksheet().update(f'G{row}:G{row}', [['--']])
                 log_worksheet().delete_rows(index+2)
                 st.session_state.log_df = log_df.drop(index)
 
@@ -1068,7 +1072,6 @@ def complex_home():
                 st.toast(f'✅ Log ID {index} deleted!')
                 time.sleep(.5)
                 st.rerun()
-
 
             if st.button('❌ Close', width='stretch'):
                 st.session_state.edit_log = None
@@ -1110,6 +1113,20 @@ def complex_home():
                 
                 flow_text = f"{data['Fund'] + ' → ' + data['Category'] if category['Type'].iloc[0] == 'Minus' else data['Category'] + ' → ' + data['Fund']}"
 
+                if category['Type'].iloc[0] == 'Plus':
+                    log_background_color = '#d4edda'
+                    log_info_color = '#155724'
+                    log_nominal_color = '#0f5132'
+                    log_status_color = '#28a745'
+                    log_status_text = '▲ Income'
+                else:
+                    log_background_color = '#f8d7da'
+                    log_info_color = '#721c24'
+                    log_nominal_color = '#58151c'
+                    log_status_color = '#dc3545'
+                    log_status_text = '▼ Expense'
+
+
                 with st.container(horizontal=True, horizontal_alignment='distribute'):
                     with st.container(width='stretch'):
                         st.markdown(
@@ -1118,6 +1135,7 @@ def complex_home():
                                 border-radius: 10px;
                                 padding: 12px;
                                 margin-bottom:5px;
+                                background-color: {log_background_color};
                             ">
                                 <div style="
                                     display: flex;
@@ -1127,13 +1145,13 @@ def complex_home():
                                 ">
                                     <div style="
                                         font-size: 12px;
-                                        color: gray;
+                                        color: {log_info_color};
                                     ">
                                         {flow_text}
                                     </div>
                                     <div style="
                                         font-size: 10px;
-                                        color: gray;
+                                        color: {log_info_color};
                                     ">
                                         {datetime.strptime(data['Timestamp'], '%d-%m-%Y').strftime('%d %B %Y')}
                                     </div>
@@ -1146,15 +1164,16 @@ def complex_home():
                                     <div style="
                                         font-size: 18px;
                                         font-weight: bold;
+                                        color: {log_nominal_color};
                                     ">
                                         Rp {data['Amount']:,}
                                     </div>
                                     <div style="
                                         font-size: 14px;
                                         font-weight: bold;
-                                        color: {'#28a745' if category['Type'].iloc[0] == 'Plus' else '#dc3545'};
+                                        color: {log_status_color};
                                     ">
-                                        {'▲ Income' if category['Type'].iloc[0] == 'Plus' else '▼ Expense'}
+                                        {log_status_text}
                                     </div>
                                 </div>
                                 <div style="
@@ -1164,13 +1183,13 @@ def complex_home():
                                 ">
                                     <div style="
                                         font-size: 10px;
-                                        color: gray;
+                                        color: {log_info_color};
                                     ">
                                         {'Notes : ' + data['Notes'] if data['Notes'] != '--' else 'Notes : -'}
                                     </div>
                                 </div>
                             </div>""", unsafe_allow_html=True)
-                    if st.button('✏️', key=f'edit_log_{i}', width='content', disabled=btn_dis):
+                    if st.button('✏️', key=f'edit_log_{i}', width='content', disabled=btn_dis, type='tertiary'):
                         st.session_state.edit_log = i
         st.divider()
 

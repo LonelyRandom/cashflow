@@ -46,9 +46,10 @@ def styling():
             border-radius: 10px;
         }}
         [class*="st-key-edit_log_"] button{{
-            height: 100px;
+            height: 97px;
             padding: 5px;
             margin-bottom: -100px;
+            background-color: #495057;
         }}  
         </style>
         </style>
