@@ -40,3 +40,41 @@ def styling():
         }}
         </style>
     """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <style>                
+    /* ================= MOBILE ================= */
+    @media (max-width: 767px) {
+        section[data-testid="stSidebar"] {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 999999 !important;
+        }
+
+        section[data-testid="stSidebar"][aria-expanded="true"] {
+            transform: translateX(0) !important;
+        }
+
+        .stSidebarCollapseButton button {
+            position: fixed !important;
+            top: 10px !important;
+            right: 10px !important;
+            z-index: 1000000 !important;
+            font-size: 24px !important;
+            padding: 14px !important;
+            background: rgba(0,0,0,0.1) !important;
+            border-radius: 50% !important;
+        }
+
+        .main .block-container {
+            padding: 1rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)

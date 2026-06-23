@@ -318,6 +318,8 @@ def lend_details(log_df, category_df):
             st.session_state.lend_dialog = False
             st.rerun()
 
+def set_date(p):
+    st.session_state.current_date = p
 
 def complex_home():
     styling()
@@ -688,6 +690,8 @@ def complex_home():
         cat_opt = ['🗒️ All'] + CATEGORY_OPTS.copy()
         st.radio('Page', options=['Home', 'Settings'], key='home_page', horizontal=True)
         category_filter = st.selectbox('Category', width='stretch', options=cat_opt)
+        date_filter = st.selectbox('Date Filter', options=['📅 Day', '📅 Month/Year', '📅 Year'])
+        date_filter = date_filter.split(' ',1)[1]
 
         st.divider()
 
@@ -886,12 +890,14 @@ def complex_home():
                         st.rerun()
                 add_funds()
         else:
+            # if date_filter == 'Day':
+            #     if st.button('📅 Go To'):
+            #         st.write('hello')
+
+            st.button('📅 Today', on_click=set_date, args=(date.today(),))
             if st.button('➕ Log'):
                 st.session_state.log_dialog = True
                 st.rerun()
-            
-                
-    
     
     if st.session_state.log_dialog:
         add_log()
@@ -1064,9 +1070,6 @@ def complex_home():
             if st.button('❌ Close', width='stretch'):
                 st.session_state.edit_log = None
                 st.rerun()
-        
-        def set_date(p):
-            st.session_state.current_date = p
 
         today = st.session_state.current_date
 
@@ -1079,13 +1082,30 @@ def complex_home():
             errors='coerce'
         )
 
-        filtered_df = filtered_df[filtered_df['filtered_date'].dt.month == st.session_state.current_date.month]
-
         st.markdown("<h1 style='text-align: center;'>Cash Flow</h1>", unsafe_allow_html=True)
-        st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%B %Y')}</h2>", unsafe_allow_html=True)
+        if date_filter == 'Month/Year':
+            st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%B %Y')}</h2>", unsafe_allow_html=True)
+            filtered_df = filtered_df[filtered_df['filtered_date'].dt.month == st.session_state.current_date.month]
+        elif date_filter == 'Day':
+            st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%d %B %Y')}</h2>", unsafe_allow_html=True)
+            filtered_df = filtered_df[filtered_df['filtered_date'].dt.date == st.session_state.current_date]
+        elif date_filter == 'Year':
+            st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%Y')}</h2>", unsafe_allow_html=True)
+            filtered_df = filtered_df[filtered_df['filtered_date'].dt.year == st.session_state.current_date.year]
+
+
         with st.container(horizontal=True):
-            st.button('⬅️', width='stretch', on_click=set_date, args=(st.session_state.current_date - relativedelta(months=1),))
-            st.button('➡️', width='stretch', on_click=set_date, args=(st.session_state.current_date + relativedelta(months=1),))
+            if date_filter == 'Month/Year':
+                date_next = st.session_state.current_date + relativedelta(months=1)
+                date_prev = st.session_state.current_date - relativedelta(months=1)
+            if date_filter == 'Day':
+                date_next = st.session_state.current_date + relativedelta(days=1)
+                date_prev = st.session_state.current_date - relativedelta(days=1)
+            if date_filter == 'Year':
+                date_next = st.session_state.current_date + relativedelta(years=1)
+                date_prev = st.session_state.current_date - relativedelta(years=1)
+            st.button('⬅️', width='stretch', on_click=set_date, args=(date_prev,))
+            st.button('➡️', width='stretch', on_click=set_date, args=(date_next,))
         
         st.divider()
         if filtered_df.empty:
