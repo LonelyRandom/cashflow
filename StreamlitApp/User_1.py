@@ -561,6 +561,8 @@ def complex_home():
             dis_amount = False
 
         amount = st.number_input('Amount', width='stretch', value=def_val, disabled=dis_amount)
+        st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {amount:,}]]")
+
 
 
         notes = st.text_area('Notes', placeholder='Notes...', width='stretch')
@@ -828,6 +830,8 @@ def complex_home():
                     category = st.text_input('Category:red[*]', placeholder='Type Category...', width="stretch")
                     icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
                     default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
+                    st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
+
                     category_type = st.radio('Type:red[*]', options=['Plus', 'Minus'], width='stretch', horizontal=True)
 
                     if st.button('➕ Add', width='stretch'):
@@ -867,6 +871,8 @@ def complex_home():
                     funds = st.text_input('funds:red[*]', placeholder='Type funds...', width="stretch")
                     icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
                     default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
+                    st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
+
 
                     if st.button('➕ Add', width='stretch'):
                         if funds and icon:
@@ -1246,6 +1252,7 @@ def complex_home():
                 
                 if st.session_state.edit_amount == i:
                     new_amount = st.number_input(f'{data["Type"]} Balance', min_value=0, value=data['Balance'])
+                    st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {new_amount:,}]]")
 
                     if data['Except Category'] != '--':
                         default_except = data['Except Category'].split(', ')
@@ -1317,21 +1324,24 @@ def complex_home():
                             st.rerun()
                 
                 if st.session_state.edit_category == i:
-                    with st.container(horizontal=True, vertical_alignment='bottom'):
-                        def_val = data['Default Value'] if data['Default Value'] != '--' else 0
-                        new_category = st.number_input(f'{data["Category"]} Default Balance', min_value=0, value=def_val)
+                    with st.container():
+                        with st.container(horizontal=True, vertical_alignment='bottom'):
+                            def_val = data['Default Value'] if data['Default Value'] != '--' else 0
+                            new_category = st.number_input(f'{data["Category"]} Default Balance', min_value=0, value=def_val)
 
-                        if st.button('💾', key=f'save_category_{i}'):
-                            category_df.at[i, 'Balance'] = new_category
-                            st.session_state.category_df = category_df
-                            row = i+2
-                            category_worksheet().update(f'B{row}:B{row}', [[new_category]])
-                            st.session_state.edit_category = None
+                            if st.button('💾', key=f'save_category_{i}'):
+                                category_df.at[i, 'Balance'] = new_category
+                                st.session_state.category_df = category_df
+                                row = i+2
+                                category_worksheet().update(f'B{row}:B{row}', [[new_category]])
+                                st.session_state.edit_category = None
 
-                            st.rerun()
-                        if st.button('❌', key=f'cancel_category_{i}'):
-                            st.session_state.edit_category = None
-                            st.rerun()
+                                st.rerun()
+                            if st.button('❌', key=f'cancel_category_{i}'):
+                                st.session_state.edit_category = None
+                                st.rerun()
+                        st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {new_category:,}]]")
+                        st.divider()
 
         st.subheader('Quick Log')
         with st.expander('Expand', width='stretch'):
@@ -1352,7 +1362,6 @@ def complex_home():
                     with st.container(horizontal=True, width='content'):
                         if st.button('✏️', type='tertiary', key=f'edit_quick_log_{i}'):
                             st.session_state.edit_quick_log = i
-                            st.rerun()
                             
                         if st.button('🗑️', type='tertiary', key=f'delete_quick_log{i}'):
                             st.session_state.quick_log_df = quick_log_df.drop(i)
@@ -1378,6 +1387,7 @@ def complex_home():
                     category_index = cat_opt.index(data['Category']) if data['Category'] in cat_opt else 0
                     edit_category = st.selectbox('Category', options=cat_opt, index=category_index)
                     edit_ammount = st.number_input('Amount', value=data['Amount'], min_value=0)
+                    st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {edit_ammount:,}]]")
 
                     if data['Notes'] == '--':
                         notes = ''
@@ -1411,9 +1421,10 @@ def complex_home():
                             st.session_state.quick_log_df = quick_log_df
                             row = i+2
                             quick_log_worksheet().update(f'A{row}:E{row}', [edit_row])
-                            st.session_state.edit_qucik_log = None
+                            st.session_state.edit_quick_log = None
+                            st.toast(f'✅ Quick Log {edit_label} updated!')
+                            time.sleep(.5)
                             st.rerun()
-                    
                     st.divider()
 
         st.divider()
