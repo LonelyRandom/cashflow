@@ -563,8 +563,6 @@ def complex_home():
         amount = st.number_input('Amount', width='stretch', value=def_val, disabled=dis_amount)
         st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {amount:,}]]")
 
-
-
         notes = st.text_area('Notes', placeholder='Notes...', width='stretch')
         if not notes:
             notes = '--'
@@ -939,7 +937,7 @@ def complex_home():
             category_index = CATEGORY_OPTS.index(log['Category']) if log['Category'] in CATEGORY_OPTS else 0
 
             with st.container(horizontal_alignment='distribute', horizontal=True): 
-                st.write(f'LOG ID - {index}')
+                st.write(f'ID -- #{log["ID"]}')
                 st.write(datetime.strptime(log["Timestamp"], "%d-%m-%Y").strftime("%d %B %Y"))
             st.divider()
 
@@ -1127,7 +1125,13 @@ def complex_home():
                 
                 flow_text = f"{data['Fund'] + ' → ' + data['Category'] if category['Type'].iloc[0] == 'Minus' else data['Category'] + ' → ' + data['Fund']}"
 
-                if category['Type'].iloc[0] == 'Plus':
+                if data['Category'] in ['💳 BCA', '🪙 Petty Cash']:
+                    log_background_color = '#d1ecf1'   
+                    log_info_color = '#0c5460'         
+                    log_nominal_color = '#084298'      
+                    log_status_color = '#0d6efd'       
+                    log_status_text = '⇄ Transfer'       
+                elif category['Type'].iloc[0] == 'Plus':
                     log_background_color = '#d4edda'
                     log_info_color = '#155724'
                     log_nominal_color = '#0f5132'

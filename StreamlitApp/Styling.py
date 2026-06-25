@@ -25,6 +25,7 @@ def styling():
             padding: 5px;
             margin-bottom: -100px;
             background-color: rgb(43, 44, 54);
+            border: 1px solid rgba(250, 250, 250, 0.2);
         }} 
         [class*="st-key-navbar-fund-info-"] {{
             text-align: center !important;
