@@ -369,8 +369,25 @@ def complex_home():
         added = False
         cat_opt = CATEGORY_OPTS.copy()
         # timestamp
-        log_id = int(datetime.today().timestamp())
-        timestamp = date.today().strftime('%d-%m-%Y')
+        times = datetime.combine(
+            st.session_state.current_date,
+            datetime.now().time()
+        )
+
+        log_id = int(times.timestamp())
+        timestamp = times.strftime('%d-%m-%Y')
+
+        id_list = log_df['ID'].to_list()
+        if log_id in id_list:
+            warn = '(Duplicate!)'
+        else:
+            warn = ''
+
+        with st.container(horizontal=True, horizontal_alignment='distribute'):
+            with st.container(width='content'):
+                st.write(f"ID -- {log_id} :red[{warn}]")
+            with st.container(width='content'):
+                st.write(datetime.strptime(timestamp, '%d-%m-%Y').strftime('%d %B %Y'))
 
         # fund
         fund = st.selectbox('Fund', options=FUND_OPTS)
@@ -899,9 +916,10 @@ def complex_home():
             #         st.write('hello')
 
             st.button('📅 Today', on_click=set_date, args=(date.today(),))
-            if st.button('➕ Log'):
-                st.session_state.log_dialog = True
-                st.rerun()
+            if date_filter == 'Day':
+                if st.button('➕ Log'):
+                    st.session_state.log_dialog = True
+                    st.rerun()
     
     if st.session_state.log_dialog:
         add_log()
