@@ -940,6 +940,8 @@ def complex_home():
 
         @st.dialog('Log Detail', width='small')
         def edit_log():
+            cat_opt = CATEGORY_OPTS.copy()
+
             index = st.session_state.edit_log
             log = log_df.loc[index]
             matched_fund = funds_df[funds_df['Type'] == log['Fund']] 
@@ -962,11 +964,196 @@ def complex_home():
             fund = st.selectbox('Fund', options=FUND_OPTS, index=fund_index)
             selected_fund = funds_df[funds_df['Type'] == fund]
             selected_fund_index = selected_fund.index[0]
-                
-            category = st.selectbox('Category', options=CATEGORY_OPTS, index=category_index)
-            selected_category = category_df[category_df['Category'] == category]
+            match_fund_data = funds_df[funds_df['Type'] == fund]
 
-            amount = st.number_input('Amount', value=log['Amount'])
+            # category
+            if match_fund_data['Except Category'].iloc[0] !='--':
+                excep_list = match_fund_data['Except Category'].iloc[0].split(', ')
+                for i in range(len(excep_list)):
+                    cat_opt.remove(excep_list[i])
+            
+            category = st.selectbox('Category', options=cat_opt, index=category_index)
+            selected_category = category_df[category_df['Category'] == category]
+            match_category_data = category_df[category_df['Category'] == category].iloc[0]
+
+
+            if category == '💷 Repayment':
+                with st.expander('💰 Lending List', width='stretch'):
+                    df = log_df[log_df['Category'].isin(['💰 Lending'])]
+                    for i in df.index:
+                        data = df.loc[i]
+                        matched_category = category_df.loc[category_df['Category'] == data['Category']]
+                        flow_text = f"{data['Fund'] + ' → ' + data['Category'] if matched_category['Type'].iloc[0] == 'Minus' else data['Category'] + ' → ' + data['Fund']}"
+                        with st.container(horizontal=True):
+                            with st.container(width='stretch'):
+                                st.markdown(
+                                f"""<div style="
+                                    border: 1px solid rgba(49, 51, 63, 1);
+                                    border-radius: 10px;
+                                    padding: 12px;
+                                    margin-bottom:5px;
+                                ">
+                                    <div style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                        margin-bottom: 8px;
+                                    ">
+                                        <div style="
+                                            font-size: 12px;
+                                            color: gray;
+                                        ">
+                                            {flow_text}
+                                        </div>
+                                        <div style="
+                                            font-size: 10px;
+                                            color: gray;
+                                        ">
+                                            {datetime.strptime(data['Timestamp'], '%d-%m-%Y').strftime('%d %B %Y')}
+                                        </div>
+                                    </div>
+                                    <div style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    ">
+                                        <div style="
+                                            font-size: 18px;
+                                            font-weight: bold;
+                                        ">
+                                            Rp {data['Amount']:,}
+                                        </div>
+                                        <div style="
+                                            font-size: 14px;
+                                            font-weight: bold;
+                                            color: {'#28a745' if matched_category['Type'].iloc[0] == 'Plus' else '#dc3545'};
+                                        ">
+                                            {'▲ Income' if matched_category['Type'].iloc[0] == 'Plus' else '▼ Expense'}
+                                        </div>
+                                    </div>
+                                    <div style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    ">
+                                        <div style="
+                                            font-size: 10px;
+                                            color: gray;
+                                        ">
+                                            {'Notes : ' + data['Notes'] if data['Notes'] != '--' else 'Notes : -'}
+                                        </div>
+                                    </div>
+                                </div>""", unsafe_allow_html=True)
+                            with st.container(width='content'):
+                                if st.session_state.selected_ref == i:
+                                    btn_type = 'primary'
+                                else:
+                                    btn_type = 'secondary'
+
+                                if st.button('👆', key=f'choose-ref-{i}', type=btn_type):
+                                    st.session_state.selected_ref = i
+                                    st.rerun()
+                    st.space('small')
+            elif category == '💸 Payback':
+                with st.expander('📋 Debt List:red[*]', width='stretch'):
+                    df = log_df[(log_df['Category'].isin(['📋 Debt'])) & (log_df['Ref ID'].isin(['--']))]
+                    for i in df.index:
+                        data = df.loc[i]
+                        matched_category = category_df.loc[category_df['Category'] == data['Category']]
+                        flow_text = f"{data['Fund'] + ' → ' + data['Category'] if matched_category['Type'].iloc[0] == 'Minus' else data['Category'] + ' → ' + data['Fund']}"
+                        with st.container(horizontal=True):
+                            with st.container(width='stretch'):
+                                st.markdown(
+                                f"""<div style="
+                                    border: 1px solid rgba(49, 51, 63, 1);
+                                    border-radius: 10px;
+                                    padding: 12px;
+                                    margin-bottom:5px;
+                                ">
+                                    <div style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                        margin-bottom: 8px;
+                                    ">
+                                        <div style="
+                                            font-size: 12px;
+                                            color: gray;
+                                        ">
+                                            {flow_text}
+                                        </div>
+                                        <div style="
+                                            font-size: 10px;
+                                            color: gray;
+                                        ">
+                                            {datetime.strptime(data['Timestamp'], '%d-%m-%Y').strftime('%d %B %Y')}
+                                        </div>
+                                    </div>
+                                    <div style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    ">
+                                        <div style="
+                                            font-size: 18px;
+                                            font-weight: bold;
+                                        ">
+                                            Rp {data['Amount']:,}
+                                        </div>
+                                        <div style="
+                                            font-size: 14px;
+                                            font-weight: bold;
+                                            color: {'#28a745' if matched_category['Type'].iloc[0] == 'Plus' else '#dc3545'};
+                                        ">
+                                            {'▲ Income' if matched_category['Type'].iloc[0] == 'Plus' else '▼ Expense'}
+                                        </div>
+                                    </div>
+                                    <div style="
+                                        display: flex;
+                                        justify-content: space-between;
+                                        align-items: center;
+                                    ">
+                                        <div style="
+                                            font-size: 10px;
+                                            color: gray;
+                                        ">
+                                            {'Notes : ' + data['Notes'] if data['Notes'] != '--' else 'Notes : -'}
+                                        </div>
+                                    </div>
+                                </div>""", unsafe_allow_html=True)
+                            with st.container(width='content'):
+                                if st.session_state.selected_ref == i:
+                                    btn_type = 'primary'
+                                else:
+                                    btn_type = 'secondary'
+
+                                if st.button('👆', key=f'choose-ref-{i}', type=btn_type):
+                                    st.session_state.selected_ref = i
+                                    st.rerun()
+                        
+                    st.space('small')
+            else:
+                st.session_state.selected_ref = '--'
+            
+            if st.session_state.selected_ref and st.session_state.selected_ref != '--':
+                ref_id = int(log_df.loc[st.session_state.selected_ref, 'ID'])
+            else:
+                ref_id = '--'
+            
+            # amount
+            if match_category_data['Default Value'] != '--':
+                def_val = match_category_data['Default Value']
+                dis_amount = False
+            elif st.session_state.selected_ref and st.session_state.selected_ref != '--':
+                def_val = log_df.loc[st.session_state.selected_ref, 'Amount']
+                dis_amount = True
+            else:
+                def_val = log['Amount']
+                dis_amount = False
+
+            amount = st.number_input('Amount', width='stretch', value=def_val, disabled=dis_amount)
+            st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {amount:,}]]")
+
             note = st.text_area('Notes', value=note_text, placeholder='Notes...')
             
             if not note:
@@ -975,6 +1162,11 @@ def complex_home():
             st.divider()
 
             if st.button('💾 Save', width='stretch'):
+                if st.session_state.selected_ref and st.session_state.selected_ref != '--':
+                    log_df.at[st.session_state.selected_ref, 'Ref ID'] = str(log['ID'])
+                    row = st.session_state.selected_ref + 2
+                    log_worksheet().update(f'G{row}:G{row}', [[log['ID']]])
+
                 if fund != log['Fund']:
                     if matched_category['Type'].iloc[0] == 'Plus':
                         reset_balance = matched_fund['Balance'].iloc[0] - log['Amount'] 
@@ -1040,21 +1232,30 @@ def complex_home():
 
                     new_row = matched_fund_index + 2
                     fund_worksheet().update(f'B{new_row}:B{new_row}', [[int(new_balance)]])
+                
+                if category == '💳 BCA' or category == '🪙 Petty Cash':
+                    category_fund_index = funds_df[funds_df['Type'] == category].index[0]
+                    fund_balance = funds_df.loc[category_fund_index, 'Balance'] + amount
+                    funds_df.at[category_fund_index, 'Balance'] = int(fund_balance)
+                    row = category_fund_index + 2
+                    fund_worksheet().update(f'B{row}:B{row}', [[int(fund_balance)]])
 
                 st.session_state.funds_df = funds_df
                 
                 updated_row = [
+                    int(log['ID']),
                     log['Timestamp'],
                     fund,
                     category,
                     amount,
-                    note
+                    note,
+                    log['Ref ID']
                 ]
 
                 log_df.loc[index] = updated_row
 
                 row = index + 2
-                log_worksheet().update(f'A{row}:E{row}', [updated_row])
+                log_worksheet().update(f'A{row}:G{row}', [updated_row])
                 st.session_state.log_df = log_df
                 st.session_state.edit_log = None
                 st.rerun()
