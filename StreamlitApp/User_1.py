@@ -1310,7 +1310,7 @@ def complex_home():
             st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%B %Y')}</h2>", unsafe_allow_html=True)
             filtered_df = filtered_df[filtered_df['filtered_date'].dt.month == st.session_state.current_date.month]
         elif date_filter == 'Day':
-            st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%d %B %Y')}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%A - %d %B %Y')}</h2>", unsafe_allow_html=True)
             filtered_df = filtered_df[filtered_df['filtered_date'].dt.date == st.session_state.current_date]
         elif date_filter == 'Year':
             st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%Y')}</h2>", unsafe_allow_html=True)
