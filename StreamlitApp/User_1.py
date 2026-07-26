@@ -1316,6 +1316,61 @@ def complex_home():
             st.markdown(f"<h2 style='text-align: center;'>{today.strftime('%Y')}</h2>", unsafe_allow_html=True)
             filtered_df = filtered_df[filtered_df['filtered_date'].dt.year == st.session_state.current_date.year]
 
+        with st.container(horizontal=True):
+            minus_category_df = category_df[category_df['Type'] == 'Minus']
+            minus_category_df = minus_category_df[~minus_category_df['Category'].isin(['🪙 Petty Cash', '💳 BCA'])]
+            minus_category = minus_category_df['Category'].to_list()
+
+            plus_category_df = category_df[category_df['Type'] == 'Plus']
+            plus_category_df = plus_category_df[~plus_category_df['Category'].isin(['🪙 Petty Cash', '💳 BCA'])]
+            plus_category = plus_category_df['Category'].to_list()
+
+            spent_df = filtered_df[filtered_df['Category'].isin(minus_category)]
+            income_df = filtered_df[filtered_df['Category'].isin(plus_category)]
+
+            spent_amount = spent_df['Amount'].sum()
+            income_amount = income_df['Amount'].sum()
+            with st.container():
+                st.markdown(
+                f"""
+                <div style="
+                    border: 1px solid rgba(49, 51, 63, 1);
+                    border-radius: 10px;
+                    padding: 12px;
+                    text-align: center;
+                ">
+                    <div style="font-size: 14px; color: red;">
+                        ▼ Total Expense
+                    </div>
+                    <div style="font-size: 28px; font-weight: bold;">
+                        {spent_amount:,}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+                )
+
+            with st.container():
+                st.markdown(
+                f"""
+                <div style="
+                    border: 1px solid rgba(49, 51, 63, 1);
+                    border-radius: 10px;
+                    padding: 12px;
+                    text-align: center;
+                ">
+                    <div style="font-size: 14px; color: green;">
+                        ▲ Total Income
+                    </div>
+                    <div style="font-size: 28px; font-weight: bold;">
+                        {income_amount:,}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+                )
+
+        st.space('small')
 
         with st.container(horizontal=True):
             if date_filter == 'Month/Year':
@@ -1329,6 +1384,7 @@ def complex_home():
                 date_prev = st.session_state.current_date - relativedelta(years=1)
             st.button('⬅️', width='stretch', on_click=set_date, args=(date_prev,))
             st.button('➡️', width='stretch', on_click=set_date, args=(date_next,))
+
         
         st.divider()
         if filtered_df.empty:
