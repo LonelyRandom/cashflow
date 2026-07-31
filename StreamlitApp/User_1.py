@@ -887,6 +887,11 @@ def complex_home():
                     icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
                     default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
                     except_cat = st.multiselect('Exception', options=CATEGORY_OPTS, width='stretch')
+                    if except_cat:
+                        new_except = ', '.join(except_cat)
+                    else:
+                        new_except = '--'
+                        
                     st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
 
 
@@ -896,13 +901,13 @@ def complex_home():
                                 new_row = [
                                     icon + ' ' + funds,
                                     default_val,
-                                    except_cat
+                                    new_except
                                 ]
 
                                 funds_df.loc[len(funds_df)] = new_row
                                 st.session_state.funds_df = funds_df
 
-                                fund_worksheet().append_row([icon + ' ' + funds, default_val, except_cat])
+                                fund_worksheet().append_row([icon + ' ' + funds, default_val, new_except])
                                 st.rerun()
                             else:
                                 st.warning(f'funds {funds.strip()} already exist in database!')
