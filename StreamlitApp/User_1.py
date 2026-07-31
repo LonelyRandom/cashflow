@@ -667,7 +667,7 @@ def complex_home():
                 if st.session_state[f'{label}_val'] != '******':
                     st.session_state[f'{label}_val'] = f'Rp. {new_balance:,}'
                 
-                if category == '💳 BCA' or category == '🪙 Petty Cash':
+                if category in funds_df['Type'].values:
                     category_fund_index = funds_df[funds_df['Type'] == category].index[0]
                     fund_balance = funds_df.loc[category_fund_index, 'Balance'] + amount
                     funds_df.at[category_fund_index, 'Balance'] = int(fund_balance)
@@ -1399,7 +1399,7 @@ def complex_home():
         else:
             for i in filtered_df.index:
                 data = filtered_df.loc[i]
-                if data['Category'] == '💳 BCA' or data['Category'] == '🪙 Petty Cash':
+                if data['Category'] in funds_df['Type'].values.tolist():
                     btn_dis = True
                 else:
                     btn_dis = False
@@ -1407,7 +1407,7 @@ def complex_home():
                 
                 flow_text = f"{data['Fund'] + ' → ' + data['Category'] if category['Type'].iloc[0] == 'Minus' else data['Category'] + ' → ' + data['Fund']}"
 
-                if data['Category'] in ['💳 BCA', '🪙 Petty Cash']:
+                if data['Category'] in funds_df['Type'].values.tolist():
                     log_background_color = '#d1ecf1'   
                     log_info_color = '#0c5460'         
                     log_nominal_color = '#084298'      
