@@ -712,7 +712,7 @@ def complex_home():
 
         st.divider()
 
-        shown = funds_df['Category'].values.tolist()
+        shown = funds_df['Type'].values.tolist()
         index = 0
 
         for i in shown:
