@@ -712,7 +712,7 @@ def complex_home():
 
         st.divider()
 
-        shown = ['💳 BCA', '🪙 Petty Cash', '🏦 Sibuhar']
+        shown = funds_df['Category'].values.tolist()
         index = 0
 
         for i in shown:
