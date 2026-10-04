@@ -30,9 +30,10 @@ if st.session_state.page == 'login':
 elif st.session_state.page == 'home':
     st.set_page_config(
         layout='wide',
-        page_title='Movies Note - Home',
+        page_title='Personal Note - Home',
         page_icon='🏠'
     )
+
     if st.session_state.usn == user_1:
         page = complex_home()
     elif st.session_state.usn == user_2:

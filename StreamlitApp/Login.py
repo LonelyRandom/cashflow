@@ -7,7 +7,7 @@ def hash_password(password: str) -> str:
 
 def log_in_auth():
     st.set_page_config(
-        page_title="Movies Note - Login",
+        page_title="Personal Note - Login",
         page_icon="🔐",
         layout="wide"
     )

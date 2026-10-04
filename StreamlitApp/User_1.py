@@ -6,7 +6,7 @@ import pandas as pd
 # from value_handling import values_handling
 from dateutil.relativedelta import relativedelta
 from streamlit_scroll_to_top import scroll_to_here
-from Data import load_data_category, load_data_fund, load_data_log, log_worksheet, load_data_quick_log, category_worksheet, fund_worksheet, quick_log_worksheet
+from Data import load_data_category, load_data_fund, load_data_log, log_worksheet, load_data_quick_log, load_data_fund_plan, category_worksheet, fund_worksheet, quick_log_worksheet, fund_plan_worksheet
 import string
 from bs4 import BeautifulSoup
 from streamlit_float import *
@@ -331,6 +331,8 @@ def complex_home():
         st.session_state.category_df = load_data_category()
     if 'quick_log_df' not in st.session_state:
         st.session_state.quick_log_df = load_data_quick_log()
+    if 'fund_plan_df' not in st.session_state:
+        st.session_state.fund_plan_df = load_data_fund_plan()
 
     if 'log_dialog' not in st.session_state:
         st.session_state.log_dialog = False
@@ -346,6 +348,7 @@ def complex_home():
     category_df = st.session_state.category_df
     funds_df = st.session_state.funds_df
     quick_log_df = st.session_state.quick_log_df
+    fund_plan_df = st.session_state.fund_plan_df
     filtered_df = log_df.copy()
 
     CATEGORY_OPTS = sorted(
@@ -631,6 +634,15 @@ def complex_home():
 
         if added:
             if amount != 0:
+                fund_index = match_fund_data.index[0]
+                if match_category_data['Type'] == 'Minus':
+                    new_balance = match_fund_data['Balance'].iloc[0] - amount
+                    if new_balance < 0:
+                        st.toast(':red[⚠️ Insufficient Balance!]')
+                        st.stop()
+                else:
+                    new_balance = match_fund_data['Balance'].iloc[0] + amount
+
                 if st.session_state.selected_ref and st.session_state.selected_ref != '--':
                     log_df.at[st.session_state.selected_ref, 'Ref ID'] = str(log_id)
                     row = st.session_state.selected_ref + 2
@@ -651,14 +663,6 @@ def complex_home():
 
                 log_worksheet().append_row(new_row)
 
-                fund_index = match_fund_data.index[0]
-                if match_category_data['Type'] == 'Minus':
-                    new_balance = match_fund_data['Balance'].iloc[0] - amount
-                    if new_balance < 0:
-                        st.toast(':red[⚠️ Insufficient Balance!]')
-                        st.stop()
-                else:
-                    new_balance = match_fund_data['Balance'].iloc[0] + amount
 
                 funds_df.at[fund_index, 'Balance'] = new_balance
 
@@ -705,10 +709,24 @@ def complex_home():
 
     with st.sidebar:
         cat_opt = ['🗒️ All'] + CATEGORY_OPTS.copy()
-        st.radio('Page', options=['Home', 'Settings'], key='home_page', horizontal=True)
+        st.radio('Page', options=['Home', 'Settings', 'Plan'], key='home_page', horizontal=True)
         category_filter = st.selectbox('Category', width='stretch', options=cat_opt)
         date_filter = st.selectbox('Date Filter', options=['📅 Day', '📅 Month/Year', '📅 Year'])
         date_filter = date_filter.split(' ',1)[1]
+        search_log = st.text_input('Search Log', width='stretch', placeholder='Input keyword...')
+        if search_log:
+            search_key = search_log.lower().split(' ')
+            mask = filtered_df.apply(
+                lambda row: all(
+                    word.lower() in str(row['Notes']).lower()
+                    for word in search_key
+                ),
+                axis=1
+            )
+
+            filtered_df = filtered_df[mask]
+
+
 
         st.divider()
 
@@ -832,101 +850,106 @@ def complex_home():
                         st.session_state.lend_dialog = True
                         st.rerun()
             
-    film_navbar = st.container(key='film-navbar', width='stretch', horizontal=True, horizontal_alignment='right')
+    film_navbar = st.container(key='film-navbar', width='stretch', horizontal=True, horizontal_alignment='distribute')
     
     with film_navbar:
-        if st.session_state.home_page == 'Settings':
-            if st.button('➕ Category'):
-                @st.dialog('Add Category', width='small')
-                def add_category():
-                    icon_list = category_df['Category'].str.split(' ',n=1).str[0].to_list()
-                    category_list = category_df['Category'].str.split(' ',n=1).str[1].to_list()
+        with st.container(horizontal_alignment='left', width='content'):
+            if st.button('↩️ Back'):
+                st.session_state.page = 'home'
+                st.rerun()
+        with st.container(horizontal_alignment='right', width='content', horizontal=True):
+            if st.session_state.home_page == 'Settings':
+                if st.button('➕ Category'):
+                    @st.dialog('Add Category', width='small')
+                    def add_category():
+                        icon_list = category_df['Category'].str.split(' ',n=1).str[0].to_list()
+                        category_list = category_df['Category'].str.split(' ',n=1).str[1].to_list()
 
-                    category = st.text_input('Category:red[*]', placeholder='Type Category...', width="stretch")
-                    icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
-                    default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
-                    st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
+                        category = st.text_input('Category:red[*]', placeholder='Type Category...', width="stretch")
+                        icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
+                        default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
+                        st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
 
-                    category_type = st.radio('Type:red[*]', options=['Plus', 'Minus'], width='stretch', horizontal=True)
+                        category_type = st.radio('Type:red[*]', options=['Plus', 'Minus'], width='stretch', horizontal=True)
 
-                    if st.button('➕ Add', width='stretch'):
-                        if category and icon:
-                            if icon.strip() not in icon_list:
-                                if category.strip() not in category_list:
-                                    if default_val == 0:
-                                        default_val = '--'
+                        if st.button('➕ Add', width='stretch'):
+                            if category and icon:
+                                if icon.strip() not in icon_list:
+                                    if category.strip() not in category_list:
+                                        if default_val == 0:
+                                            default_val = '--'
 
+                                        new_row = [
+                                            icon + ' ' + category,
+                                            str(default_val),
+                                            category_type
+                                        ]
+
+                                        category_worksheet().append_row(new_row)
+                                        category_df.loc[len(category_df)] = new_row
+                                        st.session_state.category_df = category_df
+
+                                        st.rerun()
+                                    else:
+                                        st.warning(f'Category {category.strip()} already exist in database!')
+                                else:
+                                    st.warning(f'Icon {icon.strip()} already exist in database!')
+                            else:
+                                st.warning(f'Fill mandatory fields first! (:red[*])')
+                        
+                        if st.button('❌ Close', width='stretch', type='primary'):
+                            st.rerun()
+                    add_category()
+                
+                if st.button('➕ Funds'):
+                    @st.dialog('Add Funds', width='small')
+                    def add_funds():
+                        funds_list = funds_df['Type'].str.split(' ',n=1).str[1].to_list()
+
+                        funds = st.text_input('funds:red[*]', placeholder='Type funds...', width="stretch")
+                        icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
+                        default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
+                        except_cat = st.multiselect('Exception', options=CATEGORY_OPTS, width='stretch')
+                        if except_cat:
+                            new_except = ', '.join(except_cat)
+                        else:
+                            new_except = '--'
+                            
+                        st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
+
+
+                        if st.button('➕ Add', width='stretch'):
+                            if funds and icon:
+                                if funds.strip() not in funds_list:
                                     new_row = [
-                                        icon + ' ' + category,
-                                        str(default_val),
-                                        category_type
+                                        icon + ' ' + funds,
+                                        default_val,
+                                        new_except
                                     ]
 
-                                    category_worksheet().append_row(new_row)
-                                    category_df.loc[len(category_df)] = new_row
-                                    st.session_state.category_df = category_df
+                                    funds_df.loc[len(funds_df)] = new_row
+                                    st.session_state.funds_df = funds_df
 
+                                    fund_worksheet().append_row([icon + ' ' + funds, default_val, new_except])
                                     st.rerun()
                                 else:
-                                    st.warning(f'Category {category.strip()} already exist in database!')
+                                    st.warning(f'funds {funds.strip()} already exist in database!')
                             else:
-                                st.warning(f'Icon {icon.strip()} already exist in database!')
-                        else:
-                            st.warning(f'Fill mandatory fields first! (:red[*])')
-                    
-                    if st.button('❌ Close', width='stretch', type='primary'):
-                        st.rerun()
-                add_category()
-            
-            if st.button('➕ Funds'):
-                @st.dialog('Add Funds', width='small')
-                def add_funds():
-                    funds_list = funds_df['Type'].str.split(' ',n=1).str[1].to_list()
-
-                    funds = st.text_input('funds:red[*]', placeholder='Type funds...', width="stretch")
-                    icon = st.text_input('Icon:red[*]', placeholder='Input Icon...', width="stretch")
-                    default_val = st.number_input('Default Value:red[*]', min_value=0, width='stretch')
-                    except_cat = st.multiselect('Exception', options=CATEGORY_OPTS, width='stretch')
-                    if except_cat:
-                        new_except = ', '.join(except_cat)
-                    else:
-                        new_except = '--'
+                                st.warning(f'Fill mandatory fields first! (:red[*])')
                         
-                    st.write(f":gray-background[:green[ℹ️ Inputed : Rp. {default_val:,}]]")
+                        if st.button('❌ Close', width='stretch', type='primary'):
+                            st.rerun()
+                    add_funds()
+            elif st.session_state.home_page == 'Home':
+                # if date_filter == 'Day':
+                #     if st.button('📅 Go To'):
+                #         st.write('hello')
 
-
-                    if st.button('➕ Add', width='stretch'):
-                        if funds and icon:
-                            if funds.strip() not in funds_list:
-                                new_row = [
-                                    icon + ' ' + funds,
-                                    default_val,
-                                    new_except
-                                ]
-
-                                funds_df.loc[len(funds_df)] = new_row
-                                st.session_state.funds_df = funds_df
-
-                                fund_worksheet().append_row([icon + ' ' + funds, default_val, new_except])
-                                st.rerun()
-                            else:
-                                st.warning(f'funds {funds.strip()} already exist in database!')
-                        else:
-                            st.warning(f'Fill mandatory fields first! (:red[*])')
-                    
-                    if st.button('❌ Close', width='stretch', type='primary'):
+                st.button('📅 Today', on_click=set_date, args=(date.today(),))
+                if date_filter == 'Day':
+                    if st.button('➕ Log'):
+                        st.session_state.log_dialog = True
                         st.rerun()
-                add_funds()
-        else:
-            # if date_filter == 'Day':
-            #     if st.button('📅 Go To'):
-            #         st.write('hello')
-
-            st.button('📅 Today', on_click=set_date, args=(date.today(),))
-            if date_filter == 'Day':
-                if st.button('➕ Log'):
-                    st.session_state.log_dialog = True
-                    st.rerun()
     
     if st.session_state.log_dialog:
         add_log()
@@ -1496,7 +1519,7 @@ def complex_home():
         if not st.session_state.edit_log is None:
             edit_log()
     
-    else:
+    elif st.session_state.home_page == 'Settings':
         if 'edit_amount' not in st.session_state:
             st.session_state.edit_amount = None
         if 'edit_category' not in st.session_state:
@@ -1714,3 +1737,37 @@ def complex_home():
                     st.divider()
 
         st.divider()
+    else:
+        @st.dialog('Add Plan', width='small')
+        def add_plan():
+            info = st.text_input('Information', width='stretch')
+            amount = st.number_input('Amount', width='stretch', min_value=0)
+
+            if fund_plan_df.empty:
+                balance_val = 0
+            else:
+                balance_val = fund_plan_df['Balance'].iloc[len(fund_plan_df)-1] - amount
+
+            balance = st.number_input('Balance', width='stretch', disabled=True, min_value=0, value=balance_val)
+            with st.container(horizontal=True):
+                st.button('Add', width='stretch')
+                st.button('Cancel', width='stretch', type='primary')
+
+        if 'add_plan' not in st.session_state:
+            st.session_state.add_plan = False
+        if 'edit_plan' not in st.session_state:
+            st.session_state.edit_plan = False
+
+        st.markdown("<h1 style='text-align: center;'>Fund Plan</h1>", unsafe_allow_html=True)
+        st.divider()
+        with st.container(horizontal=True, horizontal_alignment='right'):
+            if st.button('➕', width='content'):
+                st.session_state.add_plan = True
+                st.rerun()
+            if st.button('✏️', width='content'):
+                st.session_state.edit_plan = True
+                st.rerun()
+
+        st.table(fund_plan_df)
+        if st.session_state.add_plan:
+            add_plan()

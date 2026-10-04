@@ -120,3 +120,29 @@ def load_data_quick_log():
     
     except Exception as e:
         return pd.DataFrame(columns=['Label', 'Fund', 'Category', 'Amount', 'Notes'])
+
+@st.cache_resource()
+def fund_plan_worksheet():
+    client = get_gsheet_client()
+
+    spreadsheet = client.open(
+        st.secrets["indicators"]["SPREAD"]
+    )
+
+    worksheet = spreadsheet.worksheet(
+        st.secrets["indicators"]["USER_FUND_PLAN"]
+    )
+
+    return worksheet
+
+def load_data_fund_plan():
+    try:
+        fund_plan_data = fund_plan_worksheet().get_all_records()
+        df = pd.DataFrame(fund_plan_data)
+        if df.empty:
+            return pd.DataFrame(columns=['Information', 'Amount', 'Balance'])
+        else:
+            return df
+    
+    except Exception as e:
+        return pd.DataFrame(columns=['Information', 'Amount', 'Balance'])
